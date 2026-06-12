@@ -1,0 +1,32 @@
+import asyncio
+import aiohttp
+from typing import Dict, Any, List
+
+class MarketDataEngine:
+    """Core SDK engine for fetching market data asynchronously."""
+    
+    def __init__(self):
+        self.session = None
+
+    async def initialize(self):
+        if not self.session:
+            self.session = aiohttp.ClientSession()
+
+    async def close(self):
+        if self.session:
+            await self.session.close()
+
+    async def fetch_ticker(self, symbol: str) -> Dict[str, Any]:
+        """Fetches the latest live price and 24h stats for a symbol."""
+        # Example using a public, no-auth crypto API (Binance)
+        url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol.upper()}"
+        async with self.session.get(url) as response:
+            if response.status == 200:
+                data = await response.json()
+                return {
+                    "symbol": symbol.upper(),
+                    "last_price": float(data.get("lastPrice", 0.0)),
+                    "price_change_pct": float(data.get("priceChangePercent", 0.0)),
+                    "volume": float(data.get("volume", 0.0))
+                }
+            raise Exception(f"Failed to fetch ticker data: {response.status}")
